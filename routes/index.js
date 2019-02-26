@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
     });
 });
 
-router.post('/users', mid.requiresLogin, (req, res) => {
+router.post('/users', mid.requiresLogin, (req, res, next) => {
     var userToCreate = Object.assign(userBody, req.body);
 
     if (userToCreate.valid()) {
@@ -41,55 +41,57 @@ router.post('/users', mid.requiresLogin, (req, res) => {
         });
         
     } else {
-        res.send('Body not valid!');
+        var err = new Error('All fields are required.');
+        err.status = 400;
+        next(err);
     }
 });
 
-router.get('/users', (req, res) => {
+router.get('/users', (req, res, next) => {
     User.find({}, userShowProjection).then(users => {
         res.send(users);
     }).catch(err => {
-        res.send(err);
+        next(err);
     });
 });
 
-router.get('/users/:id', (req, res) => {
+router.get('/users/:id', (req, res, next) => {
     User.findById(req.params.id, userShowProjection).then(user =>{
         res.send(user);
     }).catch(err => {
-        res.send(err);
+        next(err);
     });
 });
 
-router.get('/courses', (req, res) => {
+router.get('/courses', (req, res, next) => {
     Course.find({}, courseShowProjection).populate('user', userShowProjection)
     .then(courses => {
         res.send(courses);
     }).catch(err => {
-        res.send(err);
+        next(err);
     });
 
 });
 
-router.get('/courses/:id', (req, res) => {
+router.get('/courses/:id', (req, res, next) => {
     Course.findById(req.params.id, courseShowProjection).populate('user', userShowProjection)
     .then(course => {
         res.send(course);
     }).catch(err => {
-        res.send(err);
+        next(err);
     });
 });
 
-router.get('/courses/users/:id', (req, res) => {
+router.get('/courses/users/:id', (req, res, next) => {
     Course.find({user: new ObjectId(req.params.id)}, courseShowProjection).populate('user', userShowProjection)
     .then(courses => {
         res.send(courses);
     }).catch(err => {
-        res.send(err);
+        next(err);
     });
 });
 
-router.post('/courses', mid.requiresLogin, (req, res) => {
+router.post('/courses', mid.requiresLogin, (req, res, next) => {
     var courseToCreate = Object.assign(courseBody, req.body);
 
     if (courseToCreate.valid()) {
@@ -99,12 +101,14 @@ router.post('/courses', mid.requiresLogin, (req, res) => {
             res.send(err);
         });
     } else {
-        res.send("Course's Body not ready.");
+        var err = new Error('Title, description and user are required');
+        err.status = 400;
+        next(err);
     }
 
 });
 
-router.put('/courses/:id', mid.requiresLogin, (req, res) => {
+router.put('/courses/:id', mid.requiresLogin, (req, res, next) => {
     var courseToUpdate = Object.assign(courseBody, req.body);
 
     if (courseToUpdate.valid()) {
@@ -115,7 +119,9 @@ router.put('/courses/:id', mid.requiresLogin, (req, res) => {
         });
         
     } else {
-        res.send("Course's Body not ready.");
+        var err = new Error('Title, description and user are required');
+        err.status = 400;
+        next(err);
     }
 
 });
